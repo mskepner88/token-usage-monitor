@@ -1,0 +1,55 @@
+{
+  "refreshIntervalSeconds": 120,
+  "secretBackend": "file",
+  "providerOrder": ["cursor", "grok", "claude", "codex", "ollama", "gemini", "cerebras", "vercelGateway", "bedrock"],
+  "providers": {
+    "grok": {
+      "enabled": true,
+      "authPath": "~/.grok/auth.json",
+      "cookieKeychainAccount": "grok-session"
+    },
+    "claude": {
+      "enabled": true
+    },
+    "codex": {
+      "enabled": true,
+      "authPath": "~/.codex/auth.json"
+    },
+    "ollama": {
+      "enabled": true,
+      "baseURL": "http://127.0.0.1:11434"
+    },
+    "gemini": {
+      "enabled": false,
+      "projectPath": "path to a project with .env.local",
+      "probeModel": "gemini-3.6-flash",
+      "gcpProject": "<your-gcp-project-id>"
+    },
+    "cerebras": {
+      "enabled": false,
+      "projectPath": "path to a project with .env.local",
+      "probeModel": "gpt-oss-120b"
+    },
+    "bedrock": {
+      "enabled": false,
+      "monthlyBudgetUSD": 2000,
+      "accounts": [
+        { "label": "Primary", "profile": "<your-sso-profile>", "accountId": "<your-aws-account-id>" }
+      ]
+    },
+    "vercelGateway": {
+      "enabled": false,
+      "projectPath": "path to a project with .env.local"
+    },
+    "cursor": {
+      "enabled": true,
+      "cookieKeychainAccount": "cursor-session"
+    }
+  },
+  "share": {
+    "includeAccountIDs": false,
+    "includeDollarBudgets": false,
+    "includeEmails": false,
+    "includeTokensAndCookies": false
+  }
+}

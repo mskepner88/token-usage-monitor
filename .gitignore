@@ -1,0 +1,33 @@
+# Build
+.build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+.swiftpm/
+
+# Secrets & local config (never commit)
+.env
+.env.*
+!.env.example
+config.local.json
+*.pem
+*.p12
+*.key
+
+# Packaged apps / archives
+dist/
+*.app/
+*.dmg
+*.zip
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Backups created during auth refresh
+*.tum-backup
+*.bak

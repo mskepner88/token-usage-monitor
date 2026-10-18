@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package app
+        run: ./scripts/package-app.sh
+
+      - name: Sign and notarize, or zip unsigned
+        id: artifact
+        env:
+          # Documented by name in docs/RELEASING.md. Empty values take the unsigned path.
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: ./scripts/release-artifact.sh
+
+      - name: Upload unsigned zip
+        if: steps.artifact.outputs.mode == 'unsigned'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TokenUsageMonitor-unsigned
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+
+      - name: Attach DMG to GitHub Release
+        if: steps.artifact.outputs.mode == 'signed'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "${{ steps.artifact.outputs.path }}" \
+            --title "Token Usage Monitor $GITHUB_REF_NAME" \
+            --notes "One glance at every AI limit before you hit it. Free app from Skeptacular Apps. https://buymeacoffee.com/skeptacularapps"
