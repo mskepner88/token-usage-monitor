@@ -40,24 +40,54 @@ test("reset labels", async () => {
   assert.equal(w.resetLabel(undefined, now), "");
 });
 
-test("rows pick the tightest limit and honor the filter", async () => {
+test("rows pick the tightest limit, sort lowest first, and honor the filter", async () => {
   const w = await load();
   const model = w.buildModel(sample, "medium", at("2026-10-19T12:10:00Z"));
   assert.equal(model.kind, "usage");
   assert.deepEqual(model.rows.map((r) => [r.name, r.percentLeft, r.label]), [
-    ["Claude", 58, "5-hour window"],
-    ["GPT", 34, "This week"],
     ["Cursor", 12, "Weekly limit"],
+    ["GPT", 34, "This week"],
+    ["Claude", 58, "5-hour window"],
     ["Grok", 72, "This week"],
   ]);
   assert.equal(model.updated, "Updated 5m ago");
   assert.equal(model.stale, false);
-  assert.equal(w.buildModel(sample, "small", at("2026-10-19T12:10:00Z")).rows.length, 3);
+  const small = w.buildModel(sample, "small", at("2026-10-19T12:10:00Z"));
+  assert.deepEqual(small.rows.map((r) => r.name), ["Cursor", "GPT", "Claude"]);
   const filtered = w.buildModel(sample, "medium", at("2026-10-19T12:10:00Z"), "claude, Cursor");
-  assert.deepEqual(filtered.rows.map((r) => r.name), ["Claude", "Cursor"]);
-  assert.equal(w.inlineText(filtered), "Claude 58% · Cursor 12%");
+  assert.deepEqual(filtered.rows.map((r) => r.name), ["Cursor", "Claude"]);
+  assert.equal(w.inlineText(filtered), "Cursor 12% · Claude 58%");
   const old = w.buildModel(sample, "accessoryInline", at("2026-10-19T13:00:00Z"));
   assert.ok(w.inlineText(old).startsWith("Stale · "));
+});
+
+test("large shows every provider", async () => {
+  const w = await load();
+  const many = JSON.parse(sample);
+  for (let i = 0; i < 8; i++) {
+    many.providers.push({ name: `Extra ${i}`, plan: "", limits: [{ label: "Week", percentLeft: 90 - i }] });
+  }
+  const now = at("2026-10-19T12:10:00Z");
+  assert.equal(w.buildModel(JSON.stringify(many), "large", now).rows.length, 12);
+  assert.equal(w.buildModel(JSON.stringify(many), "medium", now).rows.length, 4);
+});
+
+test("readings from older snapshots are skipped", async () => {
+  const w = await load();
+  const old = JSON.parse(sample);
+  old.providers.unshift({
+    name: "Machines",
+    plan: "",
+    limits: [
+      { label: "Spark", percentLeft: 5, reading: "41 GB" },
+      { label: "Studio", kind: "reading", percentLeft: 3 },
+    ],
+  });
+  old.providers[1].limits.push({ label: "Memory", reading: "12 GB", percentLeft: 1 });
+  const model = w.buildModel(JSON.stringify(old), "medium", at("2026-10-19T12:10:00Z"));
+  assert.ok(!model.rows.some((r) => r.name === "Machines"));
+  assert.equal(model.rows.find((r) => r.name === "Claude").percentLeft, 58);
+  assert.equal(w.isReading({ label: "x", percentLeft: 50 }), false);
 });
 
 test("friendly messages for missing, broken and newer files", async () => {
@@ -114,12 +144,12 @@ function fakeScriptable(family, fileText) {
   };
 }
 
-for (const family of ["small", "medium", "accessoryRectangular", "accessoryInline", "accessoryCircular"]) {
+for (const family of ["small", "medium", "large", "accessoryRectangular", "accessoryInline", "accessoryCircular"]) {
   test(`renders ${family} with data and without`, async () => {
     const withData = fakeScriptable(family, sample);
     await load(withData.globals);
     assert.ok(withData.widget(), "widget set");
-    assert.ok(withData.log.join(" ").match(/Claude|TUM/));
+    assert.ok(withData.log.join(" ").match(/Cursor|TUM/));
     const empty = fakeScriptable(family, null);
     await load(empty.globals);
     assert.ok(empty.widget(), "widget set when file missing");

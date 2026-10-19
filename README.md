@@ -55,6 +55,7 @@ See your meters on your iPhone Home Screen and Lock Screen. It uses the free Scr
 Good to know:
 
 - The widget shows how long ago the numbers were saved, for example "Updated 5m ago". If they are more than 30 minutes old (your Mac is asleep or off), it shows a grey **Stale** label.
+- The service with the least left comes first, so the small and medium sizes show what's running out. Large shows every service. Readings that aren't "percent left", such as Local Models memory, stay off the widget.
 - iOS decides how often widgets refresh, usually every 15 minutes or so.
 - If Scriptable's folder isn't on your Mac yet, Token Usage Monitor writes to iCloud Drive › `TokenUsageMonitor/tum-snapshot.json` instead. To use that copy, in Scriptable open **Settings** › **File Bookmarks**, add a bookmark to that `TokenUsageMonitor` folder, and name it `TokenUsageMonitor`. Or open Scriptable on your iPhone once so its folder syncs, and the next refresh will write there.
 - Test the widget logic on any computer with Node: `node --test widgets/scriptable/test`.
