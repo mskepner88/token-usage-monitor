@@ -230,6 +230,19 @@ struct SettingsView: View {
                 Toggle("Include tokens and cookies", isOn: $store.config.share.includeTokensAndCookies)
             }
 
+            Section("iPhone widget") {
+                Toggle("Write a snapshot for the iPhone widget", isOn: $store.config.phoneWidgetSnapshot)
+                Text(
+                    "After each refresh, saves tum-snapshot.json to iCloud Drive for the free Scriptable widget. It holds service names, plans, percentages, and reset times only."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                Text(store.phoneWidgetPath ?? PhoneWidgetSnapshotWriter.destination().path)
+                    .font(.caption)
+                    .textSelection(.enabled)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Paths") {
                 LabeledContent("Config") {
                     Text(ConfigStore.configURL.path)
@@ -266,6 +279,9 @@ struct SettingsView: View {
             store.saveConfig()
         }
         .onChange(of: store.config.share) { _, _ in
+            store.saveConfig()
+        }
+        .onChange(of: store.config.phoneWidgetSnapshot) { _, _ in
             store.saveConfig()
         }
         .toolbar {

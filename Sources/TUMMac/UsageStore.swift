@@ -17,6 +17,7 @@ final class UsageStore: ObservableObject {
     @Published var cerebrasKeyDraft: String = ""
     @Published var showTipNudge = false
     @Published var shareNotice: String?
+    @Published var phoneWidgetPath: String?
 
     var onDashboardChange: ((UsageDashboard) -> Void)?
 
@@ -118,6 +119,18 @@ final class UsageStore: ObservableObject {
         let service = UsageService(config: config, secrets: secrets)
         dashboard = await service.refresh()
         onDashboardChange?(dashboard)
+        if config.phoneWidgetSnapshot {
+            writePhoneWidgetSnapshot()
+        }
+    }
+
+    private func writePhoneWidgetSnapshot() {
+        do {
+            let url = try PhoneWidgetSnapshotWriter.write(.make(dashboard: dashboard))
+            phoneWidgetPath = url.path
+        } catch {
+            lastError = "iPhone widget file: \(error.localizedDescription)"
+        }
     }
 
     func saveConfig() {

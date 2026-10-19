@@ -142,7 +142,8 @@ public struct CodexProvider: UsageProvider {
             id: id,
             title: label,
             usedPercent: used,
-            resetDescription: TUMFormatting.resetLabel(unixSeconds: resetAt)
+            resetDescription: TUMFormatting.resetLabel(unixSeconds: resetAt),
+            resetsAt: resetAt.map { Date(timeIntervalSince1970: TimeInterval($0)) }
         )
     }
 }

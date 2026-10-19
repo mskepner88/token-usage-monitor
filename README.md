@@ -41,6 +41,23 @@ Open **Settings** from the menu bar popover to turn services on or off, change t
 
 Settings are saved in `~/Library/Application Support/TokenUsageMonitor/`. Pasted cookies and keys go in a local `secrets.json` there, or in the Keychain if you choose that in Settings.
 
+## iPhone widget (free)
+
+See your meters on your iPhone Home Screen and Lock Screen. It uses the free Scriptable app, needs no paid Apple account, and works through your own iCloud. Nothing goes to a server.
+
+1. **Install Scriptable.** Get [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) (free) from the App Store on your iPhone and open it once. Make sure iCloud Drive is on for Scriptable, on both your iPhone and your Mac (same Apple Account).
+2. **Turn on the setting in Token Usage Monitor.** On your Mac, open **Settings** from the menu bar popover and turn on **Write a snapshot for the iPhone widget**. After each refresh, Token Usage Monitor saves `tum-snapshot.json` to Scriptable's iCloud folder (`~/Library/Mobile Documents/iCloud~dk~simonbs~Scriptable/Documents/`). The file holds service names, plans, percentages, and reset times only. No tokens, cookies, emails, or account IDs.
+3. **Copy in the script.** In Scriptable, tap **+**, paste the contents of [`widgets/scriptable/token-usage-monitor.js`](widgets/scriptable/token-usage-monitor.js), name it **Token Usage Monitor**, and tap **Done**. Tap the script once to preview it.
+4. **Add the widget.** Touch and hold your Home Screen, tap **Edit** › **Add Widget**, pick **Scriptable**, and choose the small or medium size. Touch and hold the new widget, tap **Edit Widget**, and set **Script** to **Token Usage Monitor**. To show only some services, type their names in **Parameter**, for example `Claude, Cursor`.
+5. **Lock Screen setup.** Touch and hold your Lock Screen, tap **Customize** › **Lock Screen**, tap the widget area, and add **Scriptable** (the rectangular or inline one). Tap it and set **Script** to **Token Usage Monitor**.
+
+Good to know:
+
+- The widget shows how long ago the numbers were saved, for example "Updated 5m ago". If they are more than 30 minutes old (your Mac is asleep or off), it shows a grey **Stale** label.
+- iOS decides how often widgets refresh, usually every 15 minutes or so.
+- If Scriptable's folder isn't on your Mac yet, Token Usage Monitor writes to iCloud Drive › `TokenUsageMonitor/tum-snapshot.json` instead. To use that copy, in Scriptable open **Settings** › **File Bookmarks**, add a bookmark to that `TokenUsageMonitor` folder, and name it `TokenUsageMonitor`. Or open Scriptable on your iPhone once so its folder syncs, and the next refresh will write there.
+- Test the widget logic on any computer with Node: `node --test widgets/scriptable/test`.
+
 ## Privacy
 
 - Local-first. Everything runs on your Mac.

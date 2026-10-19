@@ -132,6 +132,7 @@ public struct GrokProvider: UsageProvider {
             title: title,
             usedPercent: usedPercent,
             resetDescription: periodEnd.map { TUMFormatting.resetLabel(from: $0, includeTime: false) },
+            resetsAt: periodEnd,
             footnote: footnote
         )
     }
@@ -150,11 +151,13 @@ public struct GrokProvider: UsageProvider {
 
         if let percent = json["usagePercent"] as? Double
             ?? (json["usagePercent"] as? Int).map(Double.init) {
+            let end = Self.periodEnd(from: json)
             return .fromUsedPercent(
                 id: "week",
                 title: "This week",
                 usedPercent: percent,
-                resetDescription: Self.periodEnd(from: json).map { TUMFormatting.resetLabel(from: $0) }
+                resetDescription: end.map { TUMFormatting.resetLabel(from: $0) },
+                resetsAt: end
             )
         }
         return nil

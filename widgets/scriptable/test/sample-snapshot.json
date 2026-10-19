@@ -1,0 +1,29 @@
+{
+  "providers" : [
+    {
+      "limits" : [
+        { "label" : "5-hour window", "percentLeft" : 58, "resetsAt" : "2026-10-19T14:10:00Z" },
+        { "label" : "This week", "percentLeft" : 81, "resetsAt" : "2026-10-23T09:00:00Z" }
+      ],
+      "name" : "Claude",
+      "plan" : "Max"
+    },
+    {
+      "limits" : [ { "label" : "This week", "percentLeft" : 34, "resetsAt" : "2026-10-21T16:30:00Z" } ],
+      "name" : "GPT",
+      "plan" : "Plus"
+    },
+    {
+      "limits" : [ { "label" : "Weekly limit", "percentLeft" : 12, "resetsAt" : "2026-10-25T00:00:00Z" } ],
+      "name" : "Cursor",
+      "plan" : "Pro"
+    },
+    {
+      "limits" : [ { "label" : "This week", "percentLeft" : 72 } ],
+      "name" : "Grok",
+      "plan" : "SuperGrok"
+    }
+  ],
+  "updatedAt" : "2026-10-19T12:05:00Z",
+  "version" : 1
+}

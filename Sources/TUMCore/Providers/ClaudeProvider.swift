@@ -177,19 +177,16 @@ public struct ClaudeProvider: UsageProvider {
             return 0
         }()
 
-        let reset: String? = {
+        let resetDate: Date? = {
             if let s = dict["resets_at"] as? String {
                 let fractional = ISO8601DateFormatter()
                 fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
                 let basic = ISO8601DateFormatter()
                 basic.formatOptions = [.withInternetDateTime]
-                if let date = fractional.date(from: s) ?? basic.date(from: s) {
-                    return TUMFormatting.resetLabel(from: date)
-                }
-                return nil
+                return fractional.date(from: s) ?? basic.date(from: s)
             }
             if let unix = dict["resets_at"] as? Int {
-                return TUMFormatting.resetLabel(unixSeconds: unix)
+                return Date(timeIntervalSince1970: TimeInterval(unix))
             }
             return nil
         }()
@@ -198,7 +195,8 @@ public struct ClaudeProvider: UsageProvider {
             id: id,
             title: title,
             usedPercent: used,
-            resetDescription: reset
+            resetDescription: resetDate.map { TUMFormatting.resetLabel(from: $0) },
+            resetsAt: resetDate
         )
     }
 }
