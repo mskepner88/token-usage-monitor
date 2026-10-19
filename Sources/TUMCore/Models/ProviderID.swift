@@ -10,6 +10,7 @@ public enum ProviderID: String, Codable, CaseIterable, Sendable, Identifiable {
     case bedrock
     case vercelGateway
     case cursor
+    case localModels
 
     public var id: String { rawValue }
 
@@ -24,6 +25,7 @@ public enum ProviderID: String, Codable, CaseIterable, Sendable, Identifiable {
         case .bedrock: "Bedrock"
         case .vercelGateway: "AI Gateway"
         case .cursor: "Cursor"
+        case .localModels: "Machines"
         }
     }
 
@@ -38,6 +40,7 @@ public enum ProviderID: String, Codable, CaseIterable, Sendable, Identifiable {
         case .bedrock: "#FF9900"
         case .vercelGateway: "#0070F3"
         case .cursor: "#1EC8A5"
+        case .localModels: "#34D399"
         }
     }
 
@@ -52,10 +55,11 @@ public enum ProviderID: String, Codable, CaseIterable, Sendable, Identifiable {
         case .bedrock: URL(string: "https://console.aws.amazon.com/cost-management/home#/cost-explorer")
         case .vercelGateway: URL(string: "https://vercel.com/docs/ai-gateway")
         case .cursor: URL(string: "https://www.cursor.com/dashboard")
+        case .localModels: nil
         }
     }
 
     public static var defaultOrder: [ProviderID] {
-        [.cursor, .grok, .claude, .codex, .ollama, .gemini, .cerebras, .vercelGateway, .bedrock]
+        [.cursor, .grok, .claude, .codex, .ollama, .localModels, .gemini, .cerebras, .vercelGateway, .bedrock]
     }
 }

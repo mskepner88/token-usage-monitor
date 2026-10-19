@@ -128,7 +128,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateStatusTitle(from dashboard: UsageDashboard) {
         guard let button = statusItem?.button else { return }
         // Icon-only menu bar item; put the summary in the hover tooltip.
-        let live = dashboard.providers.filter { $0.state == .live && !$0.meters.isEmpty }
+        let live = dashboard.providers.filter {
+            $0.id != .localModels && $0.state == .live && !$0.meters.isEmpty
+        }
         guard let worst = live.min(by: {
             ($0.meters.map(\.percentLeft).min() ?? 100) < ($1.meters.map(\.percentLeft).min() ?? 100)
         }) else {

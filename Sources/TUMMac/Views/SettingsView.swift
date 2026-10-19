@@ -45,6 +45,7 @@ struct SettingsView: View {
                 Toggle("Bedrock (AWS spend)", isOn: $store.config.providers.bedrock.enabled)
                 Toggle("Vercel AI Gateway", isOn: $store.config.providers.vercelGateway.enabled)
                 Toggle("Cursor Ultra", isOn: $store.config.providers.cursor.enabled)
+                Toggle("Machines", isOn: $store.config.providers.localModels.enabled)
             }
 
             Section("Refresh") {
@@ -76,6 +77,30 @@ struct SettingsView: View {
                 Text("Uses `POST /api/me` + `GET /api/balance` on your local Ollama after `ollama signin`.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Machines") {
+                Text(
+                    "Shows the model loaded on each machine, and how much memory it is using. TUM connects with SSH. That machine needs python3. Ollama is picked up on its own. For another server, add a status URL on that machine and the process name to measure."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                ForEach($store.config.providers.localModels.hosts) { $host in
+                    VStack(alignment: .leading, spacing: 6) {
+                        TextField("Label", text: $host.label)
+                        TextField("user@host", text: $host.sshTarget)
+                        TextField("http://127.0.0.1:8080/health", text: $host.statusURL)
+                        TextField("process name, optional", text: $host.processName)
+                        Button("Remove machine") {
+                            store.config.providers.localModels.hosts.removeAll { $0.id == host.id }
+                        }
+                    }
+                }
+                Button("Add machine") {
+                    store.config.providers.localModels.hosts.append(
+                        LocalModelHostConfig(label: "", sshTarget: "")
+                    )
+                }
             }
 
             Section("Bedrock (Cost Explorer)") {

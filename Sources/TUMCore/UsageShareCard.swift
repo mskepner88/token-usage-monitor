@@ -47,6 +47,8 @@ public struct UsageShareRow: Equatable, Sendable {
     public var accentHex: String
     /// Remaining percentages, one per meter. Empty when the provider has no meter yet.
     public var percentsLeft: [Int]
+    /// Shown instead of percentages when the meters are readings, such as memory.
+    public var valueLabel: String?
     /// Extra lines already scrubbed. Empty unless a privacy toggle opted in.
     public var details: [String]
 
@@ -54,16 +56,21 @@ public struct UsageShareRow: Equatable, Sendable {
         providerName: String,
         accentHex: String,
         percentsLeft: [Int],
+        valueLabel: String? = nil,
         details: [String] = []
     ) {
         self.providerName = providerName
         self.accentHex = accentHex
         self.percentsLeft = percentsLeft
+        self.valueLabel = valueLabel
         self.details = details
     }
 
     public var percentLabel: String {
-        percentsLeft.map { "\($0)%" }.joined(separator: " · ")
+        if let valueLabel, !valueLabel.isEmpty {
+            return valueLabel
+        }
+        return percentsLeft.map { "\($0)%" }.joined(separator: " · ")
     }
 }
 
@@ -82,10 +89,12 @@ public struct UsageShareCard: Equatable, Sendable {
         options: UsageShareOptions = .default
     ) -> UsageShareCard {
         let rows = dashboard.providers.map { snapshot in
-            UsageShareRow(
+            let readings = snapshot.meters.compactMap(\.reading)
+            return UsageShareRow(
                 providerName: snapshot.id.displayName,
                 accentHex: snapshot.id.accentHex,
                 percentsLeft: snapshot.meters.map(\.percentLeft),
+                valueLabel: readings.isEmpty ? nil : readings.joined(separator: " · "),
                 details: Self.details(from: snapshot, options: options)
             )
         }
