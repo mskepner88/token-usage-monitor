@@ -8,19 +8,23 @@ public struct AppConfig: Codable, Sendable, Equatable {
     public var providers: ProviderConfigs
     /// Privacy flags for the shareable usage card. All off by default.
     public var share: UsageShareOptions
+    /// Write `tum-snapshot.json` to iCloud Drive after each refresh for the iPhone widget. Off by default.
+    public var phoneWidgetSnapshot: Bool
 
     public init(
         refreshIntervalSeconds: Int = 120,
         providerOrder: [ProviderID] = ProviderID.defaultOrder,
         secretBackend: SecretBackend = .file,
         providers: ProviderConfigs = .init(),
-        share: UsageShareOptions = .default
+        share: UsageShareOptions = .default,
+        phoneWidgetSnapshot: Bool = false
     ) {
         self.refreshIntervalSeconds = refreshIntervalSeconds
         self.providerOrder = providerOrder
         self.secretBackend = secretBackend
         self.providers = providers
         self.share = share
+        self.phoneWidgetSnapshot = phoneWidgetSnapshot
     }
 
     public static let `default` = AppConfig()
@@ -33,6 +37,7 @@ public struct AppConfig: Codable, Sendable, Equatable {
         secretBackend = try container.decodeIfPresent(SecretBackend.self, forKey: .secretBackend) ?? .file
         providers = try container.decodeIfPresent(ProviderConfigs.self, forKey: .providers) ?? .init()
         share = try container.decodeIfPresent(UsageShareOptions.self, forKey: .share) ?? .default
+        phoneWidgetSnapshot = try container.decodeIfPresent(Bool.self, forKey: .phoneWidgetSnapshot) ?? false
     }
 }
 

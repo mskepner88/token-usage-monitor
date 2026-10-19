@@ -1,6 +1,7 @@
 {
   "refreshIntervalSeconds": 120,
   "secretBackend": "file",
+  "phoneWidgetSnapshot": false,
   "providerOrder": ["cursor", "grok", "claude", "codex", "ollama", "gemini", "cerebras", "vercelGateway", "bedrock"],
   "providers": {
     "grok": {

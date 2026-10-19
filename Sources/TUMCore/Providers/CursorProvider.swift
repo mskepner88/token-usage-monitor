@@ -98,8 +98,9 @@ public struct CursorProvider: UsageProvider {
             ?? percentFromMessage(json["namedModelSelectedDisplayMessage"] as? String)
             ?? 0
 
-        let reset = resetFromEpochMs(json["billingCycleEnd"])
-            ?? resetDescription(from: json)
+        let resetAt = dateFromEpochMs(json["billingCycleEnd"])
+            ?? resetDate(from: json)
+        let reset = resetLabel(resetAt)
 
         var meters: [UsageMeter] = [
             .fromUsedPercent(
@@ -107,6 +108,7 @@ public struct CursorProvider: UsageProvider {
                 title: "Weekly limit",
                 usedPercent: auto,
                 resetDescription: reset,
+                resetsAt: resetAt,
                 footnote: "Included in Ultra · Cursor Models"
             ),
         ]
@@ -116,7 +118,8 @@ public struct CursorProvider: UsageProvider {
                     id: "other",
                     title: "Other models",
                     usedPercent: api,
-                    resetDescription: reset
+                    resetDescription: reset,
+                    resetsAt: resetAt
                 )
             )
         }
@@ -152,7 +155,8 @@ public struct CursorProvider: UsageProvider {
         let total = double(planUsage["totalPercentUsed"])
             ?? percentUsed(in: planUsage)
 
-        let reset = resetDescription(from: json)
+        let resetAt = resetDate(from: json)
+        let reset = resetLabel(resetAt)
         var meters: [UsageMeter] = []
 
         if let auto {
@@ -162,6 +166,7 @@ public struct CursorProvider: UsageProvider {
                     title: "Weekly limit",
                     usedPercent: auto,
                     resetDescription: reset,
+                    resetsAt: resetAt,
                     footnote: "Cursor Models pool"
                 )
             )
@@ -172,7 +177,8 @@ public struct CursorProvider: UsageProvider {
                     id: "other",
                     title: "Other models",
                     usedPercent: api,
-                    resetDescription: reset
+                    resetDescription: reset,
+                    resetsAt: resetAt
                 )
             )
         }
@@ -182,7 +188,8 @@ public struct CursorProvider: UsageProvider {
                     id: "included",
                     title: "Included",
                     usedPercent: total,
-                    resetDescription: reset
+                    resetDescription: reset,
+                    resetsAt: resetAt
                 )
             )
         }
@@ -231,7 +238,7 @@ public struct CursorProvider: UsageProvider {
         return nil
     }
 
-    private static func resetFromEpochMs(_ value: Any?) -> String? {
+    private static func dateFromEpochMs(_ value: Any?) -> Date? {
         let ms: Double? = {
             switch value {
             case let s as String: return Double(s)
@@ -243,31 +250,29 @@ public struct CursorProvider: UsageProvider {
         guard let ms, ms > 1_000_000_000_000 else {
             // maybe already seconds
             if let ms, ms > 1_000_000_000 {
-                return TUMFormatting.resetLabel(
-                    from: Date(timeIntervalSince1970: ms),
-                    includeTime: false
-                )
+                return Date(timeIntervalSince1970: ms)
             }
             return nil
         }
-        return TUMFormatting.resetLabel(
-            from: Date(timeIntervalSince1970: ms / 1000),
-            includeTime: false
-        )
+        return Date(timeIntervalSince1970: ms / 1000)
     }
 
-    private static func resetDescription(from dict: [String: Any]) -> String? {
+    private static func resetLabel(_ date: Date?) -> String? {
+        date.map { TUMFormatting.resetLabel(from: $0, includeTime: false) }
+    }
+
+    private static func resetDate(from dict: [String: Any]) -> Date? {
         if let end = dict["billingCycleEnd"] as? String {
             if let ms = Double(end), ms > 1_000_000_000_000 {
-                return resetFromEpochMs(ms)
+                return dateFromEpochMs(ms)
             }
             let f = ISO8601DateFormatter()
             f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             if let date = f.date(from: end) ?? ISO8601DateFormatter().date(from: end) {
-                return TUMFormatting.resetLabel(from: date, includeTime: false)
+                return date
             }
         }
-        return resetFromEpochMs(dict["billingCycleEnd"])
+        return dateFromEpochMs(dict["billingCycleEnd"])
     }
 
     private static func membershipLabel(_ raw: String) -> String {
@@ -300,7 +305,8 @@ public struct CursorProvider: UsageProvider {
                     id: key,
                     title: key == "gpt-4" ? "Included" : key,
                     usedPercent: (used / limit) * 100,
-                    resetDescription: resetDescription(from: json)
+                    resetDescription: resetLabel(resetDate(from: json)),
+                    resetsAt: resetDate(from: json)
                 )
             )
         }

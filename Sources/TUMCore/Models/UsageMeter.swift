@@ -6,6 +6,8 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
     /// Fraction remaining in `0...1`. Prefer remaining over used for UI.
     public var remainingFraction: Double
     public var resetDescription: String?
+    /// Exact reset time when the provider gives one. Feeds the iPhone widget snapshot.
+    public var resetsAt: Date?
     public var footnote: String?
 
     public init(
@@ -13,12 +15,14 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
         title: String,
         remainingFraction: Double,
         resetDescription: String? = nil,
+        resetsAt: Date? = nil,
         footnote: String? = nil
     ) {
         self.id = id
         self.title = title
         self.remainingFraction = min(max(remainingFraction, 0), 1)
         self.resetDescription = resetDescription
+        self.resetsAt = resetsAt
         self.footnote = footnote
     }
 
@@ -31,6 +35,7 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
         title: String,
         usedPercent: Double,
         resetDescription: String? = nil,
+        resetsAt: Date? = nil,
         footnote: String? = nil
     ) -> UsageMeter {
         UsageMeter(
@@ -38,6 +43,7 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
             title: title,
             remainingFraction: 1 - (usedPercent / 100),
             resetDescription: resetDescription,
+            resetsAt: resetsAt,
             footnote: footnote
         )
     }

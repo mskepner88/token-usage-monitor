@@ -162,6 +162,13 @@ enum UsageShareSanitizer {
         return cleaned
     }
 
+    /// Removes emails, account IDs, dollar amounts, and secrets. Used for the iPhone widget file.
+    static func scrubbed(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let redacted = redact(trimmed, findings: findings(in: trimmed), options: .default)
+        return collapse(redacted)
+    }
+
     static func findings(in text: String) -> [Finding] {
         var found: [Finding] = []
         func add(_ kind: Kind, pattern: String) {
