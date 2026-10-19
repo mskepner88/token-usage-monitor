@@ -2,7 +2,7 @@
   "refreshIntervalSeconds": 120,
   "secretBackend": "file",
   "phoneWidgetSnapshot": false,
-  "providerOrder": ["cursor", "grok", "claude", "codex", "ollama", "gemini", "cerebras", "vercelGateway", "bedrock"],
+  "providerOrder": ["cursor", "grok", "claude", "codex", "ollama", "localModels", "gemini", "cerebras", "vercelGateway", "bedrock"],
   "providers": {
     "grok": {
       "enabled": true,
@@ -45,6 +45,18 @@
     "cursor": {
       "enabled": true,
       "cookieKeychainAccount": "cursor-session"
+    },
+    "localModels": {
+      "enabled": false,
+      "hosts": [
+        { "label": "Studio", "sshTarget": "user@your-mac" },
+        {
+          "label": "GPU box",
+          "sshTarget": "user@your-gpu-box",
+          "statusURL": "http://127.0.0.1:8080/health",
+          "processName": "llama-server"
+        }
+      ]
     }
   },
   "share": {

@@ -9,6 +9,8 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
     /// Exact reset time when the provider gives one. Feeds the iPhone widget snapshot.
     public var resetsAt: Date?
     public var footnote: String?
+    /// Replaces the "% left" label when the meter is a reading, such as memory in use.
+    public var reading: String?
 
     public init(
         id: String,
@@ -16,7 +18,8 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
         remainingFraction: Double,
         resetDescription: String? = nil,
         resetsAt: Date? = nil,
-        footnote: String? = nil
+        footnote: String? = nil,
+        reading: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -24,6 +27,7 @@ public struct UsageMeter: Identifiable, Sendable, Equatable {
         self.resetDescription = resetDescription
         self.resetsAt = resetsAt
         self.footnote = footnote
+        self.reading = reading
     }
 
     public var percentLeft: Int {

@@ -13,6 +13,7 @@ TUM is a free, open-source app from [Skeptacular Apps](https://skeptacularapps.c
 - Grok, Claude, ChatGPT (Codex), Cursor, and Ollama Cloud, using the logins those tools already keep on your Mac.
 - Gemini, Cerebras, Amazon Bedrock, and Vercel AI Gateway, if you turn them on and point them at your own project or account in Settings. They are off by default.
 - A share button that copies a picture of your meters. It leaves out emails, account IDs, dollar amounts, and tokens unless you turn those on.
+- Machines you can reach with SSH. The card shows the model loaded on each one and how much memory that model is using. Off until you add hosts in Settings.
 
 ## Build and run
 

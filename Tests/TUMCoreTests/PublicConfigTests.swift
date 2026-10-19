@@ -14,6 +14,8 @@ final class PublicConfigTests: XCTestCase {
         XCTAssertEqual(config.providers.vercelGateway.projectPath, "")
         XCTAssertFalse(config.providers.bedrock.enabled)
         XCTAssertTrue(config.providers.bedrock.accounts.isEmpty)
+        XCTAssertFalse(config.providers.localModels.enabled)
+        XCTAssertTrue(config.providers.localModels.hosts.isEmpty)
         XCTAssertFalse(config.share.includeAccountIDs)
         XCTAssertFalse(config.share.includeDollarBudgets)
         XCTAssertFalse(config.share.includeEmails)
@@ -27,6 +29,8 @@ final class PublicConfigTests: XCTestCase {
         XCTAssertFalse(bare.providers.gemini.enabled)
         XCTAssertFalse(bare.providers.cerebras.enabled)
         XCTAssertFalse(bare.providers.vercelGateway.enabled)
+        XCTAssertFalse(bare.providers.localModels.enabled)
+        XCTAssertTrue(bare.providers.localModels.hosts.isEmpty)
 
         let configured = """
         {"providers":{"bedrock":{"accounts":[{"label":"Primary","profile":"dev","accountId":"<your-aws-account-id>"}]},"gemini":{"projectPath":"path to a project with .env.local"}}}
@@ -52,6 +56,9 @@ final class PublicConfigTests: XCTestCase {
         XCTAssertFalse(config.providers.bedrock.enabled)
         XCTAssertEqual(config.providers.bedrock.accounts.first?.profile, "<your-sso-profile>")
         XCTAssertEqual(config.providers.bedrock.accounts.first?.accountId, "<your-aws-account-id>")
+        XCTAssertFalse(config.providers.localModels.enabled)
+        XCTAssertEqual(config.providers.localModels.hosts.first?.sshTarget, "user@your-mac")
+        XCTAssertEqual(config.providers.localModels.hosts.last?.processName, "llama-server")
 
         let text = String(decoding: data, as: UTF8.self)
         XCTAssertFalse(text.contains("~/Projects/"))

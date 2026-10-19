@@ -67,6 +67,9 @@ public struct UsageService: Sendable {
                 CursorProvider(config: config.providers.cursor, secrets: secrets, http: http)
             )
         }
+        if config.providers.localModels.enabled {
+            providers.append(LocalModelsProvider(config: config.providers.localModels))
+        }
 
         let snapshots = await withTaskGroup(of: ProviderSnapshot.self, returning: [ProviderSnapshot].self) { group in
             for provider in providers {

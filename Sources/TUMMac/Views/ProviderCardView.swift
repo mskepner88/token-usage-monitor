@@ -80,7 +80,7 @@ struct ProviderCardView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("\(meter.percentLeft)% left")
+                Text(meter.reading ?? "\(meter.percentLeft)% left")
                     .font(.system(size: 12, weight: .semibold))
             }
             SegmentedMeterView(fractionRemaining: meter.remainingFraction, color: accent)
@@ -108,7 +108,7 @@ struct ProviderCardView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Text("\(meter.percentLeft)% left")
+                Text(meter.reading ?? "\(meter.percentLeft)% left")
                     .font(.system(size: 11, weight: .semibold))
             }
             SegmentedMeterView(
@@ -160,6 +160,10 @@ struct ProviderCardView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 }
+            } else {
+                Text(TUMFormatting.time(snapshot.fetchedAt))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.top, 2)
@@ -172,6 +176,7 @@ struct ProviderCardView: View {
         case .claude: "sparkle"
         case .cursor: "cursorarrow.click.2"
         case .ollama: "cloud"
+        case .localModels: "memorychip"
         case .gemini: "sparkles"
         case .cerebras: "bolt.fill"
         case .bedrock: "cloud.fill"

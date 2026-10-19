@@ -67,8 +67,8 @@ struct ContentView: View {
     private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 1) {
-                Text("TUM")
-                    .font(.system(size: 24, weight: .bold))
+                Text("Token Usage Monitor")
+                    .font(.system(size: 16, weight: .bold))
                 Text(SkeptacularBrand.pitch)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)

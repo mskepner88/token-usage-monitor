@@ -51,6 +51,7 @@ public struct ProviderConfigs: Codable, Sendable, Equatable {
     public var bedrock: BedrockConfig
     public var vercelGateway: VercelGatewayConfig
     public var cursor: CursorConfig
+    public var localModels: LocalModelsConfig
 
     public init(
         grok: GrokConfig = .init(),
@@ -61,7 +62,8 @@ public struct ProviderConfigs: Codable, Sendable, Equatable {
         cerebras: CerebrasConfig = .init(),
         bedrock: BedrockConfig = .init(),
         vercelGateway: VercelGatewayConfig = .init(),
-        cursor: CursorConfig = .init()
+        cursor: CursorConfig = .init(),
+        localModels: LocalModelsConfig = .init()
     ) {
         self.grok = grok
         self.claude = claude
@@ -72,6 +74,7 @@ public struct ProviderConfigs: Codable, Sendable, Equatable {
         self.bedrock = bedrock
         self.vercelGateway = vercelGateway
         self.cursor = cursor
+        self.localModels = localModels
     }
 
     public init(from decoder: Decoder) throws {
@@ -85,6 +88,76 @@ public struct ProviderConfigs: Codable, Sendable, Equatable {
         bedrock = try container.decodeIfPresent(BedrockConfig.self, forKey: .bedrock) ?? .init()
         vercelGateway = try container.decodeIfPresent(VercelGatewayConfig.self, forKey: .vercelGateway) ?? .init()
         cursor = try container.decodeIfPresent(CursorConfig.self, forKey: .cursor) ?? .init()
+        localModels = try container.decodeIfPresent(LocalModelsConfig.self, forKey: .localModels) ?? .init()
+    }
+}
+
+public struct LocalModelHostConfig: Codable, Sendable, Equatable, Identifiable {
+    public var id: UUID
+    public var label: String
+    /// `user@host`. Passed to `ssh` as a single argument.
+    public var sshTarget: String
+    /// Optional URL on that machine, such as `http://127.0.0.1:8080/health`, whose JSON has a `model` field.
+    public var statusURL: String
+    /// Optional process name on that machine. Used for memory when the status URL does not report a size.
+    public var processName: String
+
+    public init(
+        id: UUID = UUID(),
+        label: String,
+        sshTarget: String,
+        statusURL: String = "",
+        processName: String = ""
+    ) {
+        self.id = id
+        self.label = label
+        self.sshTarget = sshTarget
+        self.statusURL = statusURL
+        self.processName = processName
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, label, sshTarget, statusURL, processName
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        label = try container.decodeIfPresent(String.self, forKey: .label) ?? ""
+        sshTarget = try container.decodeIfPresent(String.self, forKey: .sshTarget) ?? ""
+        statusURL = try container.decodeIfPresent(String.self, forKey: .statusURL) ?? ""
+        processName = try container.decodeIfPresent(String.self, forKey: .processName) ?? ""
+    }
+}
+
+/// Loaded model and memory on machines you can SSH to.
+/// Off until at least one host is set.
+public struct LocalModelsConfig: Codable, Sendable, Equatable {
+    public var enabled: Bool
+    public var hosts: [LocalModelHostConfig]
+
+    public init(enabled: Bool = false, hosts: [LocalModelHostConfig] = []) {
+        self.enabled = enabled
+        self.hosts = hosts
+    }
+
+    public var isConfigured: Bool {
+        hosts.contains { host in
+            !host.sshTarget.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hosts = try container.decodeIfPresent([LocalModelHostConfig].self, forKey: .hosts) ?? []
+        let configured = hosts.contains { host in
+            !host.sshTarget.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? configured
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case enabled, hosts
     }
 }
 

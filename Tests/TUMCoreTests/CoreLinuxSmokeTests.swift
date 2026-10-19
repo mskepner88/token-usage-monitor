@@ -5,13 +5,15 @@ import XCTest
 /// confirming the `#if canImport(...)` guards do not break core logic.
 final class CoreLinuxSmokeTests: XCTestCase {
     func testProviderIDCaseIterableAndDisplayNames() {
-        XCTAssertEqual(ProviderID.allCases.count, 9)
+        XCTAssertEqual(ProviderID.allCases.count, 10)
         XCTAssertEqual(Set(ProviderID.allCases.map(\.id)), Set(ProviderID.allCases.map(\.rawValue)))
         XCTAssertEqual(ProviderID.codex.displayName, "GPT")
         XCTAssertEqual(ProviderID.vercelGateway.displayName, "AI Gateway")
         for provider in ProviderID.allCases {
             XCTAssertFalse(provider.accentHex.isEmpty)
-            XCTAssertNotNil(provider.dashboardURL)
+            if provider != .localModels {
+                XCTAssertNotNil(provider.dashboardURL)
+            }
         }
     }
 
