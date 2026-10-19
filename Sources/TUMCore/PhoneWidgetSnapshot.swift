@@ -40,11 +40,13 @@ public struct PhoneWidgetSnapshot: Codable, Equatable, Sendable {
         self.providers = providers
     }
 
-    /// Providers without a meter (signed out, errors) are left out.
+    /// Only "percent left" meters go in. Readings (such as memory in use) are left out,
+    /// and so are providers with no percent-left meter (signed out, errors, Local Models).
     public static func make(dashboard: UsageDashboard, now: Date = .now) -> PhoneWidgetSnapshot {
         let providers: [Provider] = dashboard.providers.compactMap { snapshot in
-            guard !snapshot.meters.isEmpty else { return nil }
-            let limits = snapshot.meters.map { meter in
+            let meters = snapshot.meters.filter { $0.reading == nil }
+            guard !meters.isEmpty else { return nil }
+            let limits = meters.map { meter in
                 Limit(
                     label: UsageShareSanitizer.scrubbed(meter.title),
                     percentLeft: meter.percentLeft,

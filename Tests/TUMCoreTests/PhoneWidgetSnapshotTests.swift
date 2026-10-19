@@ -30,6 +30,25 @@ final class PhoneWidgetSnapshotTests: XCTestCase {
         XCTAssertTrue((limit?["resetsAt"] as? String)?.hasSuffix("Z") == true)
     }
 
+    func testReadingMetersAreLeftOut() {
+        var dashboard = sampleDashboard()
+        dashboard.providers[0].meters.append(
+            UsageMeter(id: "mem", title: "Memory", remainingFraction: 0.2, reading: "12 GB")
+        )
+        dashboard.providers.append(
+            ProviderSnapshot(
+                id: .localModels,
+                planLabel: "2 machines",
+                state: .live,
+                meters: [UsageMeter(id: "spark", title: "Spark", remainingFraction: 0.81, reading: "41 GB")],
+                detailSummary: "Details"
+            )
+        )
+        let snapshot = PhoneWidgetSnapshot.make(dashboard: dashboard, now: now)
+        XCTAssertEqual(snapshot.providers.map(\.name), ["Claude", "GPT"])
+        XCTAssertEqual(snapshot.providers[0].limits.map(\.label), ["5-hour window", "This week"])
+    }
+
     func testNoPrivateDataInFile() throws {
         let data = try PhoneWidgetSnapshot.make(dashboard: sampleDashboard(), now: now).jsonData()
         let text = String(decoding: data, as: UTF8.self)

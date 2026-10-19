@@ -99,9 +99,14 @@ function resetLabel(iso, now) {
   return `Resets in ${shortDuration(Math.floor(seconds / 60))}`;
 }
 
+// Older snapshots may carry readings (such as memory in use), which are not "percent left".
+function isReading(limit) {
+  return !!limit && (limit.reading != null || limit.kind === "reading" || typeof limit.percentLeft !== "number");
+}
+
 // The limit with the least left is the one that matters.
 function tightestLimit(provider) {
-  const limits = Array.isArray(provider.limits) ? provider.limits : [];
+  const limits = (Array.isArray(provider.limits) ? provider.limits : []).filter((l) => !isReading(l));
   if (limits.length === 0) return null;
   return limits.reduce((a, b) => (clampPercent(b.percentLeft) < clampPercent(a.percentLeft) ? b : a));
 }
@@ -116,7 +121,7 @@ function parseFilter(parameter) {
 
 function buildRows(snapshot, now, options = {}) {
   const filter = parseFilter(options.filter);
-  const max = options.max || 99;
+  const max = options.max || Infinity;
   return snapshot.providers
     .filter((p) => filter.length === 0 || filter.includes(String(p.name).toLowerCase()))
     .map((p) => {
@@ -133,13 +138,15 @@ function buildRows(snapshot, now, options = {}) {
       };
     })
     .filter(Boolean)
+    // Lowest percent left first, so the small sizes show what is running out.
+    .sort((a, b) => a.percentLeft - b.percentLeft)
     .slice(0, max);
 }
 
 const FAMILY_MAX_ROWS = {
   small: 3,
   medium: 4,
-  large: 8,
+  large: Infinity,
   accessoryRectangular: 3,
   accessoryInline: 2,
   accessoryCircular: 1,
@@ -347,6 +354,6 @@ if (typeof ListWidget !== "undefined") {
 } else if (typeof module !== "undefined") {
   module.exports = {
     parseSnapshot, colorForPercent, updatedLabel, isStale, resetLabel,
-    tightestLimit, buildRows, buildModel, inlineText, COLORS,
+    tightestLimit, isReading, buildRows, buildModel, inlineText, COLORS,
   };
 }
