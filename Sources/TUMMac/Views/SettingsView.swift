@@ -81,7 +81,7 @@ struct SettingsView: View {
 
             Section("Machines") {
                 Text(
-                    "Shows the model loaded on each machine, and how much memory it is using. TUM connects with SSH. That machine needs python3. Ollama is picked up on its own. For another server, add a status URL on that machine and the process name to measure."
+                    "Shows the model loaded on each machine, and how much of its memory is in use. TUM connects with SSH. That machine needs python3. Ollama is picked up on its own. For another server, add a status URL on that machine and the process name to measure."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
