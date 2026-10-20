@@ -79,21 +79,31 @@ public struct LocalModelsProvider: UsageProvider {
 
     static func meter(for host: LocalModelHostConfig) async throws -> UsageMeter {
         let report = try await probe(host: host)
+        return meter(for: host, report: report)
+    }
+
+    /// The bar shows the machine's memory in use out of its total, when the machine reports it.
+    /// The loaded model's own memory is a secondary detail in the footnote.
+    static func meter(for host: LocalModelHostConfig, report: LocalModelReport) -> UsageMeter {
         let name = displayName(for: host)
         let model = report.model?.trimmingCharacters(in: .whitespacesAndNewlines)
         let loaded = (model?.isEmpty == false) ? model! : "Nothing loaded"
+        let usedBytes = (report.usedBytes ?? 0) > 0 ? report.usedBytes! : nil
+        let barBytes = usedBytes ?? report.modelBytes
         let fractionFree: Double = {
             guard report.totalBytes > 0 else { return 1 }
-            return 1 - (Double(report.modelBytes) / Double(report.totalBytes))
+            return 1 - (Double(barBytes) / Double(report.totalBytes))
         }()
-        let footnote = report.totalBytes > 0 ? "of \(memory(report.totalBytes))" : nil
+        var details: [String] = []
+        if report.totalBytes > 0 { details.append("of \(memory(report.totalBytes))") }
+        if usedBytes != nil, report.modelBytes > 0 { details.append("model \(memory(report.modelBytes))") }
         return UsageMeter(
             id: host.id.uuidString,
             title: name,
             remainingFraction: fractionFree,
             resetDescription: loaded,
-            footnote: footnote,
-            reading: memory(report.modelBytes)
+            footnote: details.isEmpty ? nil : details.joined(separator: " · "),
+            reading: memory(barBytes)
         )
     }
 
@@ -217,6 +227,22 @@ public struct LocalModelsProvider: UsageProvider {
     process_name = os.environ.get("TUM_PROCESS_NAME") or ""
     total_bytes = None
     available_bytes = None
+
+    # GPU memory per process. On unified-memory machines (such as DGX Spark) the
+    # model's weights do not show in VmRSS, only here. "[N/A]" rows are skipped.
+    gpu_bytes = {}
+    try:
+        import subprocess
+        out = subprocess.run(
+            ["nvidia-smi", "--query-compute-apps=pid,used_memory", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout
+        for row in out.splitlines():
+            parts = [part.strip() for part in row.split(",")]
+            if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+                gpu_bytes[parts[0]] = gpu_bytes.get(parts[0], 0) + int(parts[1]) * 1048576
+    except Exception:
+        pass
     if os.path.exists("/proc/meminfo"):
         info = {}
         for line in open("/proc/meminfo"):
@@ -241,11 +267,14 @@ public struct LocalModelsProvider: UsageProvider {
                 for row in status.splitlines():
                     if row.startswith("VmRSS:"):
                         rss = int(row.split()[1]) * 1024
+                rss = max(rss, gpu_bytes.get(entry, 0))
                 if rss > best:
                     best = rss
             if best:
                 model_bytes = best
                 source = source or "process"
+        if model_bytes is None and model and gpu_bytes:
+            model_bytes = max(gpu_bytes.values())
     else:
         import subprocess
         total_bytes = int(subprocess.check_output(["sysctl", "-n", "hw.memsize"]).strip())
@@ -256,6 +285,7 @@ public struct LocalModelsProvider: UsageProvider {
         "modelBytes": model_bytes or 0,
         "totalBytes": total_bytes or 0,
         "availableBytes": available_bytes,
+        "usedBytes": (total_bytes - available_bytes) if (total_bytes and available_bytes is not None) else None,
         "source": source,
     }))
     """
@@ -265,6 +295,8 @@ struct LocalModelReport: Equatable, Sendable {
     var model: String?
     var modelBytes: Int
     var totalBytes: Int
+    /// Memory in use on the whole machine (Linux: MemTotal minus MemAvailable).
+    var usedBytes: Int? = nil
 
     static func parse(_ data: Data) throws -> LocalModelReport {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -277,10 +309,13 @@ struct LocalModelReport: Equatable, Sendable {
         let totalBytes = (json["totalBytes"] as? Int)
             ?? (json["totalBytes"] as? Double).map { Int($0) }
             ?? 0
+        let usedBytes = (json["usedBytes"] as? Int)
+            ?? (json["usedBytes"] as? Double).map { Int($0) }
         return LocalModelReport(
             model: model,
             modelBytes: modelBytes,
-            totalBytes: totalBytes
+            totalBytes: totalBytes,
+            usedBytes: usedBytes
         )
     }
 }
